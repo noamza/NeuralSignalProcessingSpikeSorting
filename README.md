@@ -2,7 +2,7 @@
 
 A signal processing spike sorting pipeline for nauralynx extracellular neural recordings
 
-![neural spike sorting](electrodes.PNG)
+![neural spike sorting](pics/electrodes.PNG)
 
 ## Absract
 
@@ -18,11 +18,11 @@ The input data for this project comes from the lab of Dori Derdikman, of the Tec
 
 Recordings of these neurons are made by implanting 17 micron-thick electrode wires into the rat's hippocampus near the neurons and measuring the voltage. The recordings are made from 16 electrodes at a sample rate of 32 KHz. The recording equipment (Neuralynx – Cheetah) saves the data as a raw binary which I converted to 32bit unsigned integers using Java code contained here. After storing the data in an ascii, comma-separated-value format, the rest of the processing is done in Matlab.
 
-![noisy input](input_signal_all_ch.png)
+![noisy input](pics/input_signal_all_ch.png)
 
 *60 seconds of 16 channels of voltage recordings from the neurons of a rat hippocampus. To obtain this recording, preprocessing was done by writing a java script to read form a binary file produced by the recording equipment.*
 
-![noisy input zoomed in](ch9_input.png)
+![noisy input zoomed in](pics/ch9_input.png)
 *Input zoomed in. Another plot of the raw input zooming in to about 3 seconds of recording.Since a neuron action potential spike is on the order of 1-3ms with an extra cellular voltage of about 70-150 microvolts, it is clear that there is still a lot of unwanted noise in this signal.*
 
 ## Cleaning and Filtering
@@ -31,7 +31,7 @@ A typical extracellular recording of a neuron shows a voltage spikes of around 1
 
 The Fourier transform decomposes a function of time (signal) into the fundamental frequencies that make it up. The Fourier transform is a complex-valued function of frequency, whose absolute value represents the amount of that frequency present in the original function, the complex argument is the phase offset of the basic sinusoid in that frequency. A fourier transform is considered to be the frequency domain representation of the original signal. Harmonics occur when a frequency is an integer multiple of another frequency causing an additive effect in the energy of the source signals, this is common in electronic circuitry. Observing harmonics in a biological signal is usually considered noise generated in the recording process. To remove these harmonics, I wrote code to take the average value for every 100 samples (3ms), and look for spikes more than 3 times the mean (a customized moving average filter). The following is the result after changing those values to the mean.
 
-![fourier for removing harmonics](Fourier_After_single.png)
+![fourier for removing harmonics](pics/Fourier_After_single.png)
 
 *Fourier of signal after removing harmonics. From the plot, it appears that some information was is lost in the cleaning process, however, the amount of loss is minimal compared to the noise energy removed.*
 
@@ -39,15 +39,15 @@ The Fourier transform decomposes a function of time (signal) into the fundamenta
 
 In order to be able to observe neuronal activity in the range of events on the order 1-3 ms, further cleaning of the signal is required. To accomplish this, a High Pass filter, specifically a Butterworth filter, is utilized. Essentially a high pass filter allows higher frequencies beyond a threshold to remain, while attenuating all frequencies below. In this case, I wanted to attenuate frequencies below 600 Hz because those frequencies in the signal directly interfered with voltage crests 0.8ms and longer, the range in which neuronal activity occurs. This also removes typical electronics oscillation in the 50 Hz range. The energy of these frequencies is high as seen in the original Fourier plot of the signal. I chose an implementation known as a Butterworth filter, which is characterized by a magnitude response that is maximally flat in the passband. To make sure that filtering was effective I plotted the Fourier of the signal after the high pass filtering.
 
-![fourier after highpass filtering](Fourier_after_highpass.png)
+![fourier after highpass filtering](pics/Fourier_after_highpass.png)
 
 *High Passed filter in Fourier domain. Looking at the Fourier of the signal it is clear that the high pass filter is functioning properly, minimal frequency in the signal is in the range of 0-600Hz.*
 
-![zoomed in after highpass filtering](ch9_cleaned_and_flitered_over.png)
+![zoomed in after highpass filtering](pics/ch9_cleaned_and_flitered_over.png)
 
 *Channel 9 before and after harmonics cleaning and high pass filtering. Again it is clear the amount of noise and oscillation is significantly lower than the original input.*
 
-![fourier after highpass filtering](clean_flitered_closeup2.png)
+![fourier after highpass filtering](pics/clean_flitered_closeup2.png)
 
 *Channel 9 zoomed in after harmonics cleaning and high pass filtering. These peaks around 100 microvolts which are now visible are a clear indication of neuronal activity that I was looking for. This was verified by Derdikman Lab where the data came from.*
 
@@ -63,15 +63,15 @@ Before compression, I first create a collection of relevant samples of neuronal 
 
 Principal Component Analysis uses an orthogonal transformation to decompose a set of possibly correlated sample signals into a set of linearly independent variables, called principal components, each representing a certain amount of variability within the data. A subset of these can be recombined to form a compressed version of the original signal. Because PCA maps information this way, it is highly useful in data analysis and compression. Specifically it allows quantization of data to a minimal set of coefficients to achieve a specific error bound. PCA can be done by eigenvalue decomposition of a data covariance matrix or singular value decomposition of a data matrix, which allows for non-square matrices and is considered the standard method. After forming the data matrix as described in the previous section, To decide how many pc vectors to use for compression, I consider the following plot showing the mean square error of the compressed signal to the original by the amount principal components used .
 
-![MSE of decompressed signal vs original after PCA/SVD](MSE_Vs_U.png)
+![MSE of decompressed signal vs original after PCA/SVD](pics/MSE_Vs_U.png)
 
 *MSE vs number of U vectors used to compress signal. Although 40 seems relatively high in MSE, experimentally it appeared to function well during the clustering phase.*
 
-![storage after compression](storage_vs_pca.png)
+![storage after compression](pics/storage_vs_pca.png)
 
 *Storage space before and after SVD. After utilizing SVD the size of the data matrix reduced to less than 5% of its original size.*
 
-![original vs compressed signal](original_vs_pca_40.png)
+![original vs compressed signal](pics/original_vs_pca_40.png)
 
 *Sample spike before and after compression. The sample before and after (using 40 u vectors out of 1603). It is apparent some information is lost, but the overall shape of the signal is quite similar. The average MSE for the samples is 63.77 after compression at this rate.*
 
@@ -83,12 +83,12 @@ Finding neural activity in a multi-channel cell recording involves more than ide
 
 K-means clustering is a method of vector quantization. It aims to partition n observations into k clusters; each observation belongs to the cluster with the nearest mean.
 
-![kmeans clustering on samples](k_means_input.png)
+![kmeans clustering on samples](pics/k_means_input.png)
 
 *K-means clustering on SVD compressed signal. The six clusters produced by k-means.
 Clustering is done on 16 channels simultaneously per sample. Each cluster shows the mean value of the signal, with std error bar, per channel. Also included is the number of samples per cluster, x axis is time index in frequency domain (32KHz), y axis is microvolts. Colors (top right) indicate clusters that are similar to each other. Although K-means was initialized to find 6 clusters, visually it appears that some clusters are very similar, so that possibly the data is better divided into 3 unique clusters.*
 
-![fourier after highpass filtering](time_vs_pca.png)
+![fourier after highpass filtering](pics/time_vs_pca.png)
 *Figure 18: Timing of K-means process on original vs after SVD. Compression using 40 out of the 1603 u vectors, time is significantly lower.*
 
 ## Conclusion
