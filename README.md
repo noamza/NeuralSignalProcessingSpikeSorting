@@ -1,6 +1,6 @@
-# Neural Recording Signal Processing Machine Learning Spike Sorting
+# A signal processing pipeline using machine learning for spike-sorting neural tetrode recordings
 
-A signal processing spike sorting pipeline for nauralynx extracellular neural recordings
+A signal processing spike-sorting pipeline for nauralynx extracellular neural recordings using dimensionality reduction and clustering
 
 ![neural spike sorting](pics/electrodes.PNG)
 
